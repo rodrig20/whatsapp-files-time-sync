@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     subprocess.run(f"wtsexporter -a -k {args.key} -b ./WhatsApp/Databases/msgstore.db.crypt15 --json --per-chat --no-html".split(), check=True)
 
-    print("\n")
+    print("\n\nStarting...")
     images = Info("image")
     images.update_all()
     del images
@@ -23,7 +23,6 @@ if __name__ == "__main__":
     videos = Info("video")
     videos.update_all()
     del videos
-    
+
     Info.clear()
-
-
+    print("The ADB process has finished. You may disconnect your device now")
