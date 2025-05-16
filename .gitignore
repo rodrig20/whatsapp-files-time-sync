@@ -1,0 +1,9 @@
+venv
+.venv
+__pycache__
+
+.vscode
+
+WhatsApp
+result
+msgstore.db
