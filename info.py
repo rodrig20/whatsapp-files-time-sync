@@ -25,22 +25,28 @@ class Info:
     def adb_scape(string):
         return string.replace(" ", "\\ ").replace("(", "\\(").replace(")", "\\)")
 
+    @staticmethod
+    def whatsapp_folders(folder_name):
+        base = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/"
+        sub_folders = ("", "Private/", "Sent/")
+        return [base + folder_name + "/" + sub for sub in sub_folders]
+
     def __init__(self, type) -> None:
         # Check if the type is valid
         if type == "image":
             self.type = "image/jpeg"
-            self.__search_paths = [
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/Sent/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/Private/",
-            ]
+            self.__search_paths = Info.whatsapp_folders(
+                "WhatsApp Images"
+            ) + Info.whatsapp_folders("WhatsApp Documents")
+
         elif type == "video":
             self.type = "video/mp4"
-            self.__search_paths = [
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/Sent/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/Private/",
-            ]
+            self.__search_paths = (
+                Info.whatsapp_folders("WhatsApp Video")
+                + Info.whatsapp_folders("WhatsApp Documents")
+                + Info.whatsapp_folders("WhatsApp Animated Gifs")
+            )
+
         else:
             raise ValueError(f"Invalid type: {type}. Must be 'image' or 'video'.")
 
