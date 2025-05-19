@@ -12,26 +12,41 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 class Info:
     local_output_dir = "/tmp/whatsapp_temp_adb"
+
     @staticmethod
     def clear():
-        os.remove(Info.local_output_dir)
+        # Clear local_output_dir
+        try:
+            os.rmdir(Info.local_output_dir)
+        except OSError:
+            pass
+
+    @staticmethod
+    def adb_scape(string):
+        return string.replace(" ", "\\ ").replace("(", "\\(").replace(")", "\\)")
+
+    @staticmethod
+    def whatsapp_folders(folder_name):
+        base = "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/"
+        sub_folders = ("", "Private/", "Sent/")
+        return [base + folder_name + "/" + sub for sub in sub_folders]
 
     def __init__(self, type) -> None:
         # Check if the type is valid
         if type == "image":
             self.type = "image/jpeg"
-            self.__search_paths = [
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/Sent/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Images/Private/",
-            ]
+            self.__search_paths = Info.whatsapp_folders(
+                "WhatsApp Images"
+            ) + Info.whatsapp_folders("WhatsApp Documents")
+
         elif type == "video":
             self.type = "video/mp4"
-            self.__search_paths = [
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/Sent/",
-                "/storage/emulated/0/Android/media/com.whatsapp/WhatsApp/Media/WhatsApp Video/Private/",
-            ]
+            self.__search_paths = (
+                Info.whatsapp_folders("WhatsApp Video")
+                + Info.whatsapp_folders("WhatsApp Documents")
+                + Info.whatsapp_folders("WhatsApp Animated Gifs")
+            )
+
         else:
             raise ValueError(f"Invalid type: {type}. Must be 'image' or 'video'.")
 
@@ -69,7 +84,7 @@ class Info:
         for path in self.__search_paths:
             full_path = f"{path}{name}"
             result = subprocess.run(
-                ["adb", "shell", "ls", full_path.replace(" ", "\\ ")],
+                ["adb", "shell", "ls", Info.adb_scape(full_path)],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
@@ -180,7 +195,7 @@ class Info:
                 # Push new file back to the device
                 try:
                     subprocess.run(
-                        ["adb", "shell", "rm", remote_path.replace(" ", "\\ ")],
+                        ["adb", "shell", "rm", Info.adb_scape(remote_path)],
                         check=True,
                     )
                     subprocess.run(
@@ -204,7 +219,7 @@ class Info:
                         "broadcast",
                         "-a",
                         "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
-                        f'-d file://{remote_path.replace(" ", "\\ ")}',
+                        f"-d file://{Info.adb_scape(remote_path)}",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
@@ -295,7 +310,7 @@ class Info:
                 # Push new file back to the device
                 try:
                     subprocess.run(
-                        ["adb", "shell", "rm", remote_path.replace(" ", "\\ ")],
+                        ["adb", "shell", "rm", Info.adb_scape(remote_path)],
                         check=True,
                     )
                     subprocess.run(
@@ -319,7 +334,7 @@ class Info:
                         "broadcast",
                         "-a",
                         "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
-                        f'-d file://{remote_path.replace(" ", "\\ ")}',
+                        f"-d file://{Info.adb_scape(remote_path)}",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
@@ -331,9 +346,5 @@ class Info:
         self.update_from_name()
 
         print(f"\nAll {self.type.split("/")[0]} processed")
-
-        # Limpar pasta temporária
-        try:
-            os.rmdir(Info.local_output_dir)
-        except OSError:
-            pass
+        # Clear
+        Info.clear()
