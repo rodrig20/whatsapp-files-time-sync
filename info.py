@@ -201,6 +201,19 @@ class Info:
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
                     )
+                    subprocess.run(
+                        [
+                            "adb",
+                            "shell",
+                            "touch",
+                            "-d",
+                            f"@{str(timestamp)}",
+                            Info.adb_scape(remote_path),
+                        ],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
                 except KeyboardInterrupt:
                     subprocess.run(
                         ["adb", "push", local_path, remote_path],
@@ -310,6 +323,19 @@ class Info:
                     )
                     subprocess.run(
                         ["adb", "push", local_path, remote_path],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    subprocess.run(
+                        [
+                            "adb",
+                            "shell",
+                            "touch",
+                            "-d",
+                            f"@{str(ts)}",
+                            Info.adb_scape(remote_path),
+                        ],
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
