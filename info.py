@@ -1,6 +1,7 @@
 import json
 import os
 import re
+import shutil
 import subprocess
 from datetime import datetime
 
@@ -18,8 +19,8 @@ class Info:
     def clear():
         # Clear local_output_dir
         try:
-            os.rmdir(Info.local_output_dir)
-        except OSError:
+            shutil.rmtree(Info.local_output_dir)
+        except FileNotFoundError:
             pass
 
     @staticmethod
