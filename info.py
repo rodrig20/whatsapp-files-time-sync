@@ -183,9 +183,6 @@ class Info:
                     stderr=subprocess.DEVNULL,
                 )
 
-                # Change timestamp
-                os.utime(local_path, (timestamp, timestamp))
-
                 # Change EXIF
                 try:
                     self.__change_exif(local_path, timestamp)
@@ -200,6 +197,19 @@ class Info:
                     )
                     subprocess.run(
                         ["adb", "push", local_path, remote_path],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    subprocess.run(
+                        [
+                            "adb",
+                            "shell",
+                            "touch",
+                            "-d",
+                            f"@{str(timestamp)}",
+                            Info.adb_scape(remote_path),
+                        ],
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
@@ -300,8 +310,6 @@ class Info:
                 if exif_ts and abs(exif_ts - ts) < 60:
                     continue
 
-                # Change timestamp
-                os.utime(local_path, (ts, ts))
                 try:
                     self.__change_exif(local_path, ts)
                 except Exception as e:
@@ -315,6 +323,19 @@ class Info:
                     )
                     subprocess.run(
                         ["adb", "push", local_path, remote_path],
+                        check=True,
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                    )
+                    subprocess.run(
+                        [
+                            "adb",
+                            "shell",
+                            "touch",
+                            "-d",
+                            f"@{str(ts)}",
+                            Info.adb_scape(remote_path),
+                        ],
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
