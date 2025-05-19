@@ -183,9 +183,6 @@ class Info:
                     stderr=subprocess.DEVNULL,
                 )
 
-                # Change timestamp
-                os.utime(local_path, (timestamp, timestamp))
-
                 # Change EXIF
                 try:
                     self.__change_exif(local_path, timestamp)
@@ -300,8 +297,6 @@ class Info:
                 if exif_ts and abs(exif_ts - ts) < 60:
                     continue
 
-                # Change timestamp
-                os.utime(local_path, (ts, ts))
                 try:
                     self.__change_exif(local_path, ts)
                 except Exception as e:
