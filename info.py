@@ -12,9 +12,14 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 class Info:
     local_output_dir = "/tmp/whatsapp_temp_adb"
+
     @staticmethod
     def clear():
-        os.remove(Info.local_output_dir)
+        # Clear local_output_dir
+        try:
+            os.rmdir(Info.local_output_dir)
+        except OSError:
+            pass
 
     def __init__(self, type) -> None:
         # Check if the type is valid
@@ -331,9 +336,5 @@ class Info:
         self.update_from_name()
 
         print(f"\nAll {self.type.split("/")[0]} processed")
-
-        # Limpar pasta temporária
-        try:
-            os.rmdir(Info.local_output_dir)
-        except OSError:
-            pass
+        # Clear
+        Info.clear()
