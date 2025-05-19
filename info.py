@@ -6,6 +6,7 @@ from datetime import datetime
 
 import ffmpeg
 import piexif
+from PIL import Image
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
@@ -34,13 +35,15 @@ class Info:
     def __init__(self, type) -> None:
         # Check if the type is valid
         if type == "image":
-            self.type = "image/jpeg"
+            self.type = "image"
+            self.__sub_types = ("image/jpeg", "image/png")
             self.__search_paths = Info.whatsapp_folders(
                 "WhatsApp Images"
             ) + Info.whatsapp_folders("WhatsApp Documents")
 
         elif type == "video":
-            self.type = "video/mp4"
+            self.type = "video"
+            self.__sub_types = ("video/mp4",)
             self.__search_paths = (
                 Info.whatsapp_folders("WhatsApp Video")
                 + Info.whatsapp_folders("WhatsApp Documents")
@@ -66,7 +69,7 @@ class Info:
         # and store them in the dictionary
         for msg_id in messages:
             msg = messages[msg_id]
-            if msg["media"] is True and msg["mime"] == self.type:
+            if msg["media"] is True and msg["mime"] in self.__sub_types:
                 self.__chat_info[os.path.basename(msg["data"])] = msg["timestamp"]
 
     # Load all json files from the result folder and get the media from each chat
@@ -95,7 +98,7 @@ class Info:
 
     # Change the EXIF data of the file
     def __change_exif(self, path, ts):
-        if self.type == "video/mp4":
+        if self.type == "video":
             # Get the new timestamp of the video
             dt_iso = datetime.fromtimestamp(ts).strftime("%Y-%m-%dT%H:%M:%S")
             # Create move the file to a temporary file
@@ -122,7 +125,7 @@ class Info:
                     os.remove(temp_path)
                 raise e
 
-        elif self.type == "image/jpeg":
+        elif self.type == "image":
             # Get the new timestamp of the image
             dt_str = datetime.fromtimestamp(ts).strftime("%Y:%m:%d %H:%M:%S")
 
@@ -149,11 +152,12 @@ class Info:
             exif_dict["Exif"][piexif.ExifIFD.DateTimeOriginal] = dt_str.encode("utf-8")
             exif_dict["Exif"][piexif.ExifIFD.DateTimeDigitized] = dt_str.encode("utf-8")
             exif_bytes = piexif.dump(exif_dict)
-            piexif.insert(exif_bytes, path)
+
+            img = Image.open(path)
+            img.save(path, exif=exif_bytes)
+
         else:
-            raise ValueError(
-                f"Invalid type: {self.type}. Must be 'image/jpeg' or 'video/mp4'"
-            )
+            raise ValueError(f"Invalid type: {self.type}. Must be 'image' or video")
 
     # Update the files found in chat
     def update_from_chat(self):
@@ -161,15 +165,15 @@ class Info:
         with logging_redirect_tqdm():
             for file_name, timestamp in tqdm(
                 self.__chat_info.items(),
-                desc=f"Processing {self.type.split('/')[0]}s",
-                unit=f"{self.type.split('/')[0][:3]}",
+                desc=f"Processing {self.type}s",
+                unit=f"{self.type[:3]}",
                 dynamic_ncols=True,
             ):
                 # Check if the file name is on the device
                 remote_path = self.__find_file_on_device(file_name)
                 if not remote_path:
                     print(
-                        f"\33[2K\r{self.type.split("/")[0].title()} '{file_name}' not found on device"
+                        f"\33[2K\r{self.type.title()} '{file_name}' not found on device"
                     )
                     continue
 
@@ -270,15 +274,19 @@ class Info:
     def update_from_name(self):
         os.makedirs(Info.local_output_dir, exist_ok=True)
         all_filenames = self.__get_files_from_wa_storage()
-        if self.type == "image/jpeg":
-            regex = re.compile(r"IMG-(\d{8})-WA\d+\.jpg")
-        elif self.type == "video/mp4":
-            regex = re.compile(r"VID-(\d{8})-WA\d+\.mp4")
+
+        if self.type == "image":
+            regex = re.compile(
+                r"IMG[-_](\d{8})[-_]WA\d+(?:_\d+)?\.(jpe?g|png)", re.IGNORECASE
+            )
+        elif self.type == "video":
+            regex = re.compile(r"VID[-_](\d{8})[-_]WA\d+(?:_\d+)?\.mp4", re.IGNORECASE)
 
         with logging_redirect_tqdm():
             for dir_path, fname in tqdm(
                 all_filenames,
-                desc=f"Checking {self.type.split("/")[0]}s with no chat",
+                desc=f"Checking {self.type}s with no chat",
+                unit=f"{self.type[:3]}",
                 dynamic_ncols=True,
             ):
                 # Check if has the correct regex
@@ -366,6 +374,6 @@ class Info:
         self.update_from_chat()
         self.update_from_name()
 
-        print(f"\nAll {self.type.split("/")[0]} processed")
+        print(f"\nAll {self.type} processed")
         # Clear
         Info.clear()
