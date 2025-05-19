@@ -21,6 +21,10 @@ class Info:
         except OSError:
             pass
 
+    @staticmethod
+    def adb_scape(string):
+        return string.replace(" ", "\\ ").replace("(", "\\(").replace(")", "\\)")
+
     def __init__(self, type) -> None:
         # Check if the type is valid
         if type == "image":
@@ -74,7 +78,7 @@ class Info:
         for path in self.__search_paths:
             full_path = f"{path}{name}"
             result = subprocess.run(
-                ["adb", "shell", "ls", full_path.replace(" ", "\\ ")],
+                ["adb", "shell", "ls", Info.adb_scape(full_path)],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
@@ -185,7 +189,7 @@ class Info:
                 # Push new file back to the device
                 try:
                     subprocess.run(
-                        ["adb", "shell", "rm", remote_path.replace(" ", "\\ ")],
+                        ["adb", "shell", "rm", Info.adb_scape(remote_path)],
                         check=True,
                     )
                     subprocess.run(
@@ -209,7 +213,7 @@ class Info:
                         "broadcast",
                         "-a",
                         "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
-                        f'-d file://{remote_path.replace(" ", "\\ ")}',
+                        f"-d file://{Info.adb_scape(remote_path)}",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
@@ -300,7 +304,7 @@ class Info:
                 # Push new file back to the device
                 try:
                     subprocess.run(
-                        ["adb", "shell", "rm", remote_path.replace(" ", "\\ ")],
+                        ["adb", "shell", "rm", Info.adb_scape(remote_path)],
                         check=True,
                     )
                     subprocess.run(
@@ -324,7 +328,7 @@ class Info:
                         "broadcast",
                         "-a",
                         "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
-                        f'-d file://{remote_path.replace(" ", "\\ ")}',
+                        f"-d file://{Info.adb_scape(remote_path)}",
                     ],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
