@@ -42,7 +42,7 @@ python main.py 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 
 The script will:
 1. Pull the WhatsApp database from your device
-2. Export chat data using [wtsexporter](https://github.com/siffreinsg/wtsexporter)
+2. Export chat data using [wtsexporter](https://github.com/KnugiHK/WhatsApp-Chat-Exporter)
 3. Process all images and videos, updating their timestamps
 4. Push the updated files back to your device
 
